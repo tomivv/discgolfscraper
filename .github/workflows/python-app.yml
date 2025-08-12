@@ -53,23 +53,31 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.APP_NAME }}-${{ github.sha }}
-          path: dist/
+          path: dist
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+      # - name: Setup SSH key
+      #   run: |
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+      #     chmod 600 ~/.ssh/id_rsa
+      #     ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
       - name: Deploy to VM
+        env:
+          USER: ${{ secrets.USER }}
+          HOST: ${{ secrets.VM_HOST }}
+          PRIVATE_KEY: ${{ secrets.VM_SSH_PRIVATE_KEY }}
         run: |
+          mkdir -p ~/.ssh
+          echo "$PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
           # Upload the application package
           scp -i ~/.ssh/id_rsa dist/${{ env.APP_NAME }}-${{ github.sha }}.tar.gz \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}:/tmp/
+            $USER@$HOST:/tmp/
 
           # Execute deployment script on VM
-          ssh -i ~/.ssh/id_rsa ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} << 'EOF'
+          ssh -i ~/.ssh/id_rsa $USER@$HOST << 'EOF'
             # Set variables
             APP_NAME="${{ env.APP_NAME }}"
             BUILD_ID="${{ github.sha }}"
@@ -93,7 +101,7 @@ jobs:
             sudo mv ${APP_NAME}-${BUILD_ID} current || sudo mv * current/
             
             # Set permissions
-            sudo chown -R ${{ secrets.VM_USER }}:${{ secrets.VM_USER }} ${APP_DIR}/current
+            sudo chown -R $USER:$USER ${APP_DIR}/current
             
             # Install/update dependencies
             cd ${APP_DIR}/current
