@@ -16,16 +16,6 @@ on:
           - production
           - staging
           - development
-      skip_tests:
-        description: "Skip test execution"
-        required: false
-        default: false
-        type: boolean
-      force_deploy:
-        description: "Force deployment even if tests fail"
-        required: false
-        default: false
-        type: boolean
 
 env:
   PYTHON_VERSION: "3.13"
@@ -77,6 +67,20 @@ jobs:
         with:
           name: ${{ env.APP_NAME }}-${{ github.sha }}
           path: dist
+
+      - name: Debug network connectivity
+        run: |
+          echo "Testing connectivity to VM..."
+          echo "VM Host: ${{ secrets[steps.vars.outputs.vm_host] }}"
+
+          # Test basic connectivity
+          ping -c 3 ${{ secrets[steps.vars.outputs.vm_host] }} || echo "Ping failed"
+
+          # Test SSH port specifically
+          nc -zv ${{ secrets[steps.vars.outputs.vm_host] }} 22 || echo "SSH port 22 not reachable"
+
+          # Test DNS resolution
+          nslookup ${{ secrets[steps.vars.outputs.vm_host] }} || echo "DNS lookup failed"
 
       - name: Setup SSH key
         run: |
