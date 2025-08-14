@@ -33,11 +33,6 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Create application package
         run: |
           mkdir -p dist
@@ -67,20 +62,6 @@ jobs:
         with:
           name: ${{ env.APP_NAME }}-${{ github.sha }}
           path: dist
-
-      - name: Debug network connectivity
-        run: |
-          echo "Testing connectivity to VM..."
-          echo "VM Host: ${{ secrets[steps.vars.outputs.vm_host] }}"
-
-          # Test basic connectivity
-          ping -c 3 ${{ secrets[steps.vars.outputs.vm_host] }} || echo "Ping failed"
-
-          # Test SSH port specifically
-          nc -zv ${{ secrets[steps.vars.outputs.vm_host] }} 22 || echo "SSH port 22 not reachable"
-
-          # Test DNS resolution
-          nslookup ${{ secrets[steps.vars.outputs.vm_host] }} || echo "DNS lookup failed"
 
       - name: Setup SSH key
         run: |
@@ -123,8 +104,9 @@ jobs:
             sudo chown -R ${{ secrets.VM_USER }}:${{ secrets.VM_USER }} ${APP_DIR}/current
             
             # Install/update dependencies
-            cd ${APP_DIR}/current
-            python3 -m pip install --user -r requirements.txt
+            cd ${APP_DIR}
+            source venv/bin/activate
+            pip install -r requirements.txt
             
             # Start the service
             sudo systemctl start ${SERVICE_NAME}
