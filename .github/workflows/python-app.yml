@@ -114,7 +114,7 @@ jobs:
             echo TGBOT_KEY=${{ secrets.TGBOT_KEY}} > .env.local
             
             # Set permissions
-            sudo chown -R ${{ secrets.VM_USER }}:${{ secrets.VM_USER }} ${APP_DIR}
+            sudo chown -R ${{ secrets.VM_SERVICE_USER }}:${{ secrets.VM_SERVICE_USER }} ${APP_DIR}
             
             # Install/update dependencies
             cd ${APP_DIR}
