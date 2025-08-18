@@ -30,26 +30,26 @@ async def get_course_with_name(update: Update, context: ContextTypes.DEFAULT_TYP
         logger.warning("Can find message")
         return
     
-    course_name = update.message.text.split('/course ')[1]
-    if course_name == '' or course_name == ' ':
+    course_input = update.message.text.split('/course ')[1]
+    if course_input == '' or course_input == ' ':
         logger.warning("Message doesn't contain course name")
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Message doesn't contain course name")
         return
     
     courses = get_course_names()
     upcoming_tournaments: List[EventInfo] = []
-    isValidCourse = False
+    course_name = ""
     for course in courses:
-        if not check_valid_course_name(course, course_name):
+        if not check_valid_course_name(course[0], course_input):
             continue
-        isValidCourse = True
+        course_name = course[0]
 
-    if not isValidCourse:
+    if not course_name:
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Didn't find course with name {course_name}")
         return
 
     upcoming_tournaments = get_course_details(course_name)
-    tournament_str = ''
+    tournament_str = ""
     for tournament in upcoming_tournaments:
         tournament_str += f'{tournament[1]} - {tournament[0]}\n'
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Upcoming tournaments for course: {course_name} \n{tournament_str}")
