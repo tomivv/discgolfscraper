@@ -1,8 +1,11 @@
 import logging
+from typing import List
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from bot.utils import check_valid_course_name
 from database import get_course_names
+from models.classes import EventInfo
 from scraper import create_course, get_course_details
 
 logger = logging.getLogger(__name__)
@@ -31,6 +34,18 @@ async def get_course_with_name(update: Update, context: ContextTypes.DEFAULT_TYP
     if course_name == '' or course_name == ' ':
         logger.warning("Message doesn't contain course name")
         await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Message doesn't contain course name")
+        return
+    
+    courses = get_course_names()
+    upcoming_tournaments: List[EventInfo] = []
+    isValidCourse = False
+    for course in courses:
+        if not check_valid_course_name(course, course_name):
+            continue
+        isValidCourse = True
+
+    if not isValidCourse:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Didn't find course with name {course_name}")
         return
 
     upcoming_tournaments = get_course_details(course_name)
