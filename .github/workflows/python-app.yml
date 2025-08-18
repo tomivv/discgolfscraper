@@ -94,20 +94,33 @@ jobs:
             if [ -d "${APP_DIR}/current" ]; then
               sudo mv ${APP_DIR}/current ${APP_DIR}/backup-$(date +%Y%m%d-%H%M%S)
             fi
+
+            # Save log and db files
+            sudo mkdir - ${APP_DIR}/persistent
+            cd ${APP_DIR}
+            sudo mv application.log ${APP_DIR}/persistent/
+            sudo mv database.db ${APP_DIR}/persistent/
             
             # Extract new version
             cd ${APP_DIR}
             sudo tar -xzf /tmp/${APP_NAME}-${BUILD_ID}.tar.gz -C ${APP_DIR}/
             sudo mv ${APP_NAME}-${BUILD_ID} current || sudo mv * current/
+
+            # Set log and db files back
+            sudo mv ${APP_DIR}/persistent/application.log ${APP_DIR}
+            sudo mv ${APP_DIR}/persistent/database.db ${APP_DIR}
+
+            # Set env file
+            echo TGBOT_KEY=${{ secrets.TGBOT_KEY}} > .env.local
             
             # Set permissions
-            sudo chown -R ${{ secrets.VM_USER }}:${{ secrets.VM_USER }} ${APP_DIR}/current
+            sudo chown -R ${{ secrets.VM_SERVICE_USER }}:${{ secrets.VM_SERVICE_USER }} ${APP_DIR}
             
             # Install/update dependencies
             cd ${APP_DIR}
             source venv/bin/activate
             pip install -r requirements.txt
-            
+
             # Start the service
             sudo systemctl start ${SERVICE_NAME}
             sudo systemctl enable ${SERVICE_NAME}
