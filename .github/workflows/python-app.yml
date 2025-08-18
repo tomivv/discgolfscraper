@@ -107,6 +107,9 @@ jobs:
             cd ${APP_DIR}
             source venv/bin/activate
             pip install -r requirements.txt
+
+            # Set env file
+            echo TGBOT_KEY=${{ secrets.TGBOT_KEY}} > .env.local
             
             # Start the service
             sudo systemctl start ${SERVICE_NAME}
