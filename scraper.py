@@ -92,6 +92,11 @@ def get_course_details(course_name: str) -> List[EventInfo]:
         layout_ids: List[int] = json.loads(str(course_details[3]))
         update_course(layout_ids, metrix_id)
 
+    course_details = get_course(course_name)
+    
+    if course_details is None:
+        return []
+
     events: List[EventInfo] = json.loads(str(course_details[4]))
     upcoming_events: List[EventInfo] = []
 
